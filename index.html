@@ -448,8 +448,6 @@
     <script>
         // Save form data to localStorage
         function saveFormToStorage() {
-            const statementMakerCanvas = document.getElementById('statementMakerCanvas');
-            const witnessCanvas = document.getElementById('witnessCanvas');
             const data = {
                 matterOf: document.getElementById('matterOf').value,
                 place: document.getElementById('place').value,
@@ -463,9 +461,7 @@
                 witnessName: document.getElementById('witnessName').value,
                 witnessRank: document.getElementById('witnessRank').value,
                 witnessDate: document.getElementById('witnessDate').value,
-                currentAgeInput: window.currentAgeInput,
-                statementMakerSignature: statementMakerCanvas ? statementMakerCanvas.toDataURL('image/png') : null,
-                witnessSignature: witnessCanvas ? witnessCanvas.toDataURL('image/png') : null
+                currentAgeInput: window.currentAgeInput
             };
             localStorage.setItem('statementGenForm', JSON.stringify(data));
         }
@@ -491,38 +487,17 @@
             } else {
                 toggleAgeInput('age', {target: document.querySelector('.toggle-btn.active')});
             }
-            // Restore signature canvases
-            setTimeout(function() {
-                if (data.statementMakerSignature) {
-                    const canvas = document.getElementById('statementMakerCanvas');
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
-                    img.onload = function() {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    };
-                    img.src = data.statementMakerSignature;
-                }
-                if (data.witnessSignature) {
-                    const canvas = document.getElementById('witnessCanvas');
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
-                    img.onload = function() {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    };
-                    img.src = data.witnessSignature;
-                }
-            }, 200); // Wait for canvas to be initialized
         }
 
         // Dark mode toggle
         function toggleDarkMode() {
-            if (document.getElementById('darkModeToggle').checked) {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            if (isDark) {
                 document.documentElement.classList.add('dark-mode');
             } else {
                 document.documentElement.classList.remove('dark-mode');
             }
+            localStorage.setItem('statementGenDarkMode', isDark ? '1' : '0');
         }
         // (rest of your JS unchanged)
         let isDrawing = false;
@@ -598,7 +573,15 @@
             window.addEventListener('resize', setCanvasSize);
             const ctx = canvas.getContext('2d');
             canvases[canvasId] = { canvas, ctx };
-            ctx.strokeStyle = '#000000';
+            // Set initial stroke color based on dark mode
+            function setSignatureColor() {
+                if (document.documentElement.classList.contains('dark-mode')) {
+                    ctx.strokeStyle = '#ffffff';
+                } else {
+                    ctx.strokeStyle = '#000000';
+                }
+            }
+            setSignatureColor();
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -609,6 +592,11 @@
             canvas.addEventListener('touchstart', handleTouch, {passive:false});
             canvas.addEventListener('touchmove', handleTouch, {passive:false});
             canvas.addEventListener('touchend', stopDrawing);
+            // Listen for dark mode changes
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'statementGenDarkMode') setSignatureColor();
+            });
+            document.getElementById('darkModeToggle').addEventListener('change', setSignatureColor);
             function startDrawing(e) {
                 isDrawing = true;
                 const rect = canvas.getBoundingClientRect();
@@ -642,6 +630,16 @@
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
+            // Restore dark mode setting
+            const darkModeSetting = localStorage.getItem('statementGenDarkMode');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeSetting === '1') {
+                darkModeToggle.checked = true;
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                darkModeToggle.checked = false;
+                document.documentElement.classList.remove('dark-mode');
+            }
             restoreFormFromStorage();
             [
                 'matterOf','place','date','name','age','dob','statementText','statementMakerName','statementMakerDate','witnessName','witnessRank','witnessDate'
