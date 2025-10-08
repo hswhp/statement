@@ -368,7 +368,7 @@
             </div>
             <div class="form-group">
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required placeholder="John Smith" style="::placeholder{color:#a1a1aa;opacity:0.7;}">
             </div>
             <div class="form-group">
                 <label>Age or Date of Birth:</label>
@@ -446,6 +446,76 @@
         </form>
     </div>
     <script>
+        // Save form data to localStorage
+        function saveFormToStorage() {
+            const statementMakerCanvas = document.getElementById('statementMakerCanvas');
+            const witnessCanvas = document.getElementById('witnessCanvas');
+            const data = {
+                matterOf: document.getElementById('matterOf').value,
+                place: document.getElementById('place').value,
+                date: document.getElementById('date').value,
+                name: document.getElementById('name').value,
+                age: document.getElementById('age').value,
+                dob: document.getElementById('dob').value,
+                statementText: document.getElementById('statementText').value,
+                statementMakerName: document.getElementById('statementMakerName').value,
+                statementMakerDate: document.getElementById('statementMakerDate').value,
+                witnessName: document.getElementById('witnessName').value,
+                witnessRank: document.getElementById('witnessRank').value,
+                witnessDate: document.getElementById('witnessDate').value,
+                currentAgeInput: window.currentAgeInput,
+                statementMakerSignature: statementMakerCanvas ? statementMakerCanvas.toDataURL('image/png') : null,
+                witnessSignature: witnessCanvas ? witnessCanvas.toDataURL('image/png') : null
+            };
+            localStorage.setItem('statementGenForm', JSON.stringify(data));
+        }
+
+        // Restore form data from localStorage
+        function restoreFormFromStorage() {
+            const data = JSON.parse(localStorage.getItem('statementGenForm') || '{}');
+            if (!data || Object.keys(data).length === 0) return;
+            document.getElementById('matterOf').value = data.matterOf || '';
+            document.getElementById('place').value = data.place || '';
+            document.getElementById('date').value = data.date || '';
+            document.getElementById('name').value = data.name || '';
+            document.getElementById('age').value = data.age || '';
+            document.getElementById('dob').value = data.dob || '';
+            document.getElementById('statementText').value = data.statementText || '';
+            document.getElementById('statementMakerName').value = data.statementMakerName || '';
+            document.getElementById('statementMakerDate').value = data.statementMakerDate || '';
+            document.getElementById('witnessName').value = data.witnessName || '';
+            document.getElementById('witnessRank').value = data.witnessRank || '';
+            document.getElementById('witnessDate').value = data.witnessDate || '';
+            if (data.currentAgeInput === 'dob') {
+                toggleAgeInput('dob', {target: document.querySelector('.toggle-btn:not(.active)')});
+            } else {
+                toggleAgeInput('age', {target: document.querySelector('.toggle-btn.active')});
+            }
+            // Restore signature canvases
+            setTimeout(function() {
+                if (data.statementMakerSignature) {
+                    const canvas = document.getElementById('statementMakerCanvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = data.statementMakerSignature;
+                }
+                if (data.witnessSignature) {
+                    const canvas = document.getElementById('witnessCanvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = data.witnessSignature;
+                }
+            }, 200); // Wait for canvas to be initialized
+        }
+
         // Dark mode toggle
         function toggleDarkMode() {
             if (document.getElementById('darkModeToggle').checked) {
@@ -572,6 +642,16 @@
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
+            restoreFormFromStorage();
+            [
+                'matterOf','place','date','name','age','dob','statementText','statementMakerName','statementMakerDate','witnessName','witnessRank','witnessDate'
+            ].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', saveFormToStorage);
+                    el.addEventListener('change', saveFormToStorage);
+                }
+            });
             initializeCanvas('statementMakerCanvas');
             initializeCanvas('witnessCanvas');
             setToday();
@@ -849,3 +929,4 @@
     </script>
 </body>
 </html>
+
