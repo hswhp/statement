@@ -638,9 +638,19 @@
         function initializeCanvas(canvasId) {
             const canvas = document.getElementById(canvasId);
             function setCanvasSize() {
+                // Save current drawing
+                const tempDataUrl = canvas.toDataURL();
                 const container = canvas.parentElement;
                 canvas.width = container.offsetWidth;
                 canvas.height = Math.max(container.offsetHeight, 120);
+                // Restore drawing
+                if (tempDataUrl) {
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = tempDataUrl;
+                }
             }
             setCanvasSize();
             window.addEventListener('resize', setCanvasSize);
