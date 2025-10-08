@@ -651,6 +651,7 @@
             function addPageHeader(pageNum) {
                 if (pageNum > 1) {
                     doc.setFontSize(10);
+                    // Statement of:
                     doc.setFont(undefined, 'bold');
                     const statementLabel = `Statement of:`;
                     const matterLabel = `In the matter of:`;
@@ -658,10 +659,16 @@
                     const line2Width = doc.getTextWidth(matterLabel) + 1 + doc.getTextWidth(matterOf);
                     const maxLineWidth = Math.max(line1Width, line2Width);
                     const centerStart = (pageWidth - maxLineWidth) / 2;
+                    // Add spacing between label and text (e.g., 6 units)
+                    const labelTextSpacing = 6;
                     doc.text(statementLabel, centerStart, 10);
-                    doc.text(name, centerStart + doc.getTextWidth(statementLabel) + 1, 10);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(name, centerStart + doc.getTextWidth(statementLabel) + labelTextSpacing, 10);
+                    // In the matter of:
+                    doc.setFont(undefined, 'bold');
                     doc.text(matterLabel, centerStart, 17);
-                    doc.text(matterOf, centerStart + doc.getTextWidth(matterLabel) + 1, 17);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(matterOf, centerStart + doc.getTextWidth(matterLabel) + labelTextSpacing, 17);
                     doc.setFontSize(12);
                     doc.setFont(undefined, 'normal');
                 }
@@ -734,7 +741,7 @@
                 addPageHeader(2);
                 yPosition = 30;
                 doc.text(remainingLines, margin + numberIndent, yPosition);
-                yPosition += remainingLines.length * 7 + 7;
+                yPosition += remainingLines.length * 7 + 2; // minimal space after statement 1
             } else if (spaceNeeded > spaceAvailable) {
                 addSignatures(yPosition);
                 doc.addPage();
@@ -742,11 +749,11 @@
                 yPosition = 30;
                 doc.text(`${statementNumber}.`, margin, yPosition);
                 doc.text(lines1, margin + numberIndent, yPosition);
-                yPosition += lines1.length * 7 + 7;
+                yPosition += lines1.length * 7 + 2; // minimal space after statement 1
             } else {
                 doc.text(`${statementNumber}.`, margin, yPosition);
                 doc.text(lines1, margin + numberIndent, yPosition);
-                yPosition += lines1.length * 7 + 7;
+                yPosition += lines1.length * 7 + 2; // minimal space after statement 1
             }
             statementNumber++;
 
@@ -794,38 +801,32 @@
             statementNumber++;
 
             const paragraphs = statementText.split(/\n\s*\n/).filter(p => p.trim() !== '');
-            paragraphs.forEach(paragraph => {
+            paragraphs.forEach((paragraph, idx) => {
                 const paragraphText = paragraph.trim();
                 const lines = doc.splitTextToSize(paragraphText, maxWidth - numberIndent);
-                const spaceNeeded = lines.length * 7 + 7;
-                const spaceAvailable = 240 - yPosition;
-                if (spaceNeeded > spaceAvailable && spaceAvailable > 10) {
-                    const linesThatFit = Math.floor((spaceAvailable - 7) / 7);
-                    const firstPageLines = lines.slice(0, linesThatFit);
-                    const remainingLines = lines.slice(linesThatFit);
-                    doc.text(`${statementNumber}.`, margin, yPosition);
-                    doc.text(firstPageLines, margin + numberIndent, yPosition);
-                    addSignatures(yPosition + firstPageLines.length * 7);
-                    doc.addPage();
-                    addPageHeader(doc.internal.getNumberOfPages());
-                    yPosition = 30;
-                    doc.text(remainingLines, margin + numberIndent, yPosition);
-                    yPosition += remainingLines.length * 7 + 7;
-                } else if (spaceNeeded > spaceAvailable) {
+                const paragraphHeight = lines.length * 7 + 14; // 14 for extra spacing
+                const signatureAreaY = 260; // leave space for signatures (was 240)
+                const spaceAvailable = signatureAreaY - yPosition;
+                const paragraphNumberX = margin;
+                const paragraphTextX = margin + numberIndent + 2;
+                // If not enough space for both number and text, move both to next page
+                if (paragraphHeight > spaceAvailable) {
                     addSignatures(yPosition);
                     doc.addPage();
                     addPageHeader(doc.internal.getNumberOfPages());
                     yPosition = 30;
-                    doc.text(`${statementNumber}.`, margin, yPosition);
-                    doc.text(lines, margin + numberIndent, yPosition);
-                    yPosition += lines.length * 7 + 7;
+                    doc.text(`${statementNumber}.`, paragraphNumberX, yPosition);
+                    doc.text(lines, paragraphTextX, yPosition);
+                    yPosition += lines.length * 7;
+                    yPosition += (idx === 0 ? 2 : 7); // minimal space after paragraph 1
                 } else {
-                    doc.text(`${statementNumber}.`, margin, yPosition);
-                    doc.text(lines, margin + numberIndent, yPosition);
-                    yPosition += lines.length * 7 + 7;
+                    doc.text(`${statementNumber}.`, paragraphNumberX, yPosition);
+                    doc.text(lines, paragraphTextX, yPosition);
+                    yPosition += lines.length * 7;
+                    yPosition += (idx === 0 ? 2 : 7); // minimal space after paragraph 1
                 }
                 statementNumber++;
-            })
+            });
             addSignatures(yPosition);
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
