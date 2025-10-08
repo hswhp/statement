@@ -6,126 +6,215 @@
     <title>Witness Statement Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Times New Roman', serif;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #fafafa;
+            padding: 16px;
+            line-height: 1.5;
         }
         .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: white;
-            padding: 30px;
+            padding: 24px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 28px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 24px;
         }
         .form-group {
             margin-bottom: 20px;
         }
         label {
             display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #34495e;
-        }
-        input[type="text"], input[type="date"], input[type="number"], textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
             font-size: 14px;
-            font-family: inherit;
-            box-sizing: border-box;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
         }
-        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, textarea:focus {
-            border-color: #3498db;
+        input[type="text"], 
+        input[type="date"], 
+        input[type="number"], 
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        input:focus, 
+        select:focus, 
+        textarea:focus {
+            border-color: #2563eb;
             outline: none;
         }
-        input[type="text"]::placeholder, input[type="date"]::placeholder, input[type="number"]::placeholder, textarea::placeholder {
-            color: #bbb;
-            opacity: 0.7;
-        }
         textarea {
-            height: 200px;
+            min-height: 120px;
             resize: vertical;
         }
-        .signature-section {
-            margin-top: 40px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .signature-row {
+        .date-input-group {
             display: flex;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 8px;
         }
-        .signature-box {
+        .date-input-group input {
             flex: 1;
         }
+        .today-btn {
+            padding: 10px 16px;
+            background: #f3f4f6;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .today-btn:hover {
+            background: #e5e7eb;
+        }
+        .today-btn:active {
+            background: #d1d5db;
+        }
+        .age-input-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 8px;
+            background: #f3f4f6;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .age-input-field {
+            display: none;
+        }
+        .age-input-field.active {
+            display: block;
+        }
+        .signature-section {
+            margin-top: 32px;
+            padding: 20px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .signature-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #111;
+        }
+        .signature-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        @media (min-width: 768px) {
+            .signature-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .signature-box label {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
         .signature-canvas-container {
-            border: 2px solid #000;
+            border: 1px solid #d1d5db;
             background-color: white;
-            margin-bottom: 10px;
-            position: relative;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            overflow: hidden;
         }
         .signature-canvas {
             display: block;
             cursor: crosshair;
-        }
-        .signature-controls {
-            margin-top: 10px;
+            width: 100%;
+            height: auto;
         }
         .clear-signature {
-            background-color: #e74c3c;
+            background-color: #ef4444;
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
         .clear-signature:hover {
-            background-color: #c0392b;
+            background-color: #dc2626;
         }
         .signature-details {
-            margin-top: 15px;
+            margin-top: 12px;
         }
         .signature-details > div {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
-        .signature-details input {
-            margin-top: 5px;
+        .signature-details label {
+            font-size: 13px;
         }
         .generate-btn {
-            display: block;
             width: 100%;
-            padding: 15px;
-            background-color: #27ae60;
+            padding: 14px;
+            background-color: #2563eb;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 30px;
-            transition: background-color 0.3s;
+            margin-top: 24px;
+            transition: background-color 0.2s;
         }
         .generate-btn:hover {
-            background-color: #219a52;
+            background-color: #1d4ed8;
         }
         .generate-btn:active {
-            background-color: #1e8449;
+            background-color: #1e40af;
         }
         small {
-            color: #7f8c8d;
-            font-style: italic;
+            display: block;
+            margin-top: 4px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
@@ -146,7 +235,10 @@
             
             <div class="form-group">
                 <label for="date">Date:</label>
-                <input type="date" id="date" name="date" required>
+                <div class="date-input-group">
+                    <input type="date" id="date" name="date" required>
+                    <button type="button" class="today-btn" onclick="setToday()">Today</button>
+                </div>
             </div>
             
             <div class="form-group">
@@ -155,8 +247,18 @@
             </div>
             
             <div class="form-group">
-                <label for="age">Age:</label>
-                <input type="number" id="age" name="age" min="1" max="120" required>
+                <label>Age or Date of Birth:</label>
+                <div class="age-input-toggle">
+                    <button type="button" class="toggle-btn active" onclick="toggleAgeInput('age')">Age</button>
+                    <button type="button" class="toggle-btn" onclick="toggleAgeInput('dob')">Date of Birth</button>
+                </div>
+                <div id="ageField" class="age-input-field active">
+                    <input type="number" id="age" name="age" min="1" max="120" placeholder="Enter age">
+                </div>
+                <div id="dobField" class="age-input-field">
+                    <input type="text" id="dob" name="dob" placeholder="DD/MM/YYYY">
+                    <small>Enter date of birth in DD/MM/YYYY format</small>
+                </div>
             </div>
             
             <div class="form-group">
@@ -172,7 +274,7 @@
                     <div class="signature-box">
                         <label>Statement Maker Signature:</label>
                         <div class="signature-canvas-container">
-                            <canvas id="statementMakerCanvas" class="signature-canvas" width="350" height="120"></canvas>
+                            <canvas id="statementMakerCanvas" class="signature-canvas" height="120"></canvas>
                         </div>
                         <div class="signature-controls">
                             <button type="button" class="clear-signature" onclick="clearSignature('statementMakerCanvas')">Clear Signature</button>
@@ -192,7 +294,7 @@
                     <div class="signature-box">
                         <label>Witness Signature:</label>
                         <div class="signature-canvas-container">
-                            <canvas id="witnessCanvas" class="signature-canvas" width="350" height="120"></canvas>
+                            <canvas id="witnessCanvas" class="signature-canvas" height="120"></canvas>
                         </div>
                         <div class="signature-controls">
                             <button type="button" class="clear-signature" onclick="clearSignature('witnessCanvas')">Clear Signature</button>
@@ -204,7 +306,13 @@
                             </div>
                             <div>
                                 <label for="witnessRank">Witness Rank:</label>
-                                <input type="text" id="witnessRank" name="witnessRank" required>
+                                <select id="witnessRank" name="witnessRank" required>
+                                    <option value="">Select rank...</option>
+                                    <option value="Constable">Constable</option>
+                                    <option value="Senior Constable">Senior Constable</option>
+                                    <option value="Sergeant">Sergeant</option>
+                                    <option value="Inspector">Inspector</option>
+                                </select>
                             </div>
                             <div>
                                 <label for="witnessDate">Date:</label>
@@ -223,10 +331,80 @@
         // Initialize signature canvases
         let isDrawing = false;
         let canvases = {};
+        let currentAgeInput = 'age'; // Track which age input method is active
+
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            document.getElementById('statementMakerDate').value = today;
+            document.getElementById('witnessDate').value = today;
+        }
+
+        function toggleAgeInput(type) {
+            currentAgeInput = type;
+            
+            // Update toggle buttons
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide appropriate fields
+            document.getElementById('ageField').classList.remove('active');
+            document.getElementById('dobField').classList.remove('active');
+            
+            if (type === 'age') {
+                document.getElementById('ageField').classList.add('active');
+                document.getElementById('dob').value = '';
+            } else {
+                document.getElementById('dobField').classList.add('active');
+                document.getElementById('age').value = '';
+            }
+        }
+
+        function calculateAgeFromDOB(dobString) {
+            // Parse DD/MM/YYYY format
+            const parts = dobString.split('/');
+            if (parts.length !== 3) return null;
+            
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+            const year = parseInt(parts[2], 10);
+            
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+            
+            const birthDate = new Date(year, month, day);
+            const today = new Date();
+            
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        // Auto-calculate age from DOB
+        document.getElementById('dob').addEventListener('input', function() {
+            const dobString = this.value.trim();
+            if (dobString.length === 10) { // DD/MM/YYYY = 10 characters
+                const age = calculateAgeFromDOB(dobString);
+                if (age !== null && age >= 0 && age <= 120) {
+                    document.getElementById('age').value = age;
+                }
+            }
+        });
 
         function initializeCanvas(canvasId) {
             const canvas = document.getElementById(canvasId);
             const ctx = canvas.getContext('2d');
+            
+            // Set canvas size based on container
+            const container = canvas.parentElement;
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = 120;
             
             canvases[canvasId] = { canvas, ctx };
             
@@ -312,7 +490,20 @@
             const place = document.getElementById('place').value;
             const date = new Date(document.getElementById('date').value).toLocaleDateString('en-GB');
             const name = document.getElementById('name').value;
-            const age = document.getElementById('age').value;
+            
+            // Get age from appropriate input
+            let age;
+            if (currentAgeInput === 'age') {
+                age = document.getElementById('age').value;
+            } else {
+                const dobString = document.getElementById('dob').value;
+                age = calculateAgeFromDOB(dobString);
+                if (age === null) {
+                    alert('Please enter a valid date of birth in DD/MM/YYYY format.');
+                    return;
+                }
+            }
+            
             const statementText = document.getElementById('statementText').value;
             const statementMakerDate = new Date(document.getElementById('statementMakerDate').value).toLocaleDateString('en-GB');
             const witnessName = document.getElementById('witnessName').value;
@@ -543,7 +734,7 @@
                 yPosition = 30;
                 doc.text(`${statementNumber}.`, margin, yPosition);
                 doc.text(lines3, margin + numberIndent, yPosition);
-                yPosition += lines3.length * 7 + 7; // Fixed spacing regardless of content length // Fixed spacing regardless of content length
+                yPosition += lines3.length * 7 + 7; // Fixed spacing regardless of content length
             } else {
                 doc.text(`${statementNumber}.`, margin, yPosition);
                 doc.text(lines3, margin + numberIndent, yPosition);
@@ -584,7 +775,7 @@
                     yPosition = 30;
                     doc.text(`${statementNumber}.`, margin, yPosition);
                     doc.text(lines, margin + numberIndent, yPosition);
-                    yPosition += lines.length * 7 + 7; // Fixed spacing regardless of content length // Fixed spacing regardless of content length
+                    yPosition += lines.length * 7 + 7; // Fixed spacing regardless of content length
                 } else {
                     doc.text(`${statementNumber}.`, margin, yPosition);
                     doc.text(lines, margin + numberIndent, yPosition);
