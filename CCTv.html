@@ -689,7 +689,7 @@ doc.text(lines4, margin + numberIndent, yPosition);
 yPosition += lines4.length * 7 + 8;
 statementNumber++;
 
-const para5 = `${statementNumber}. In relation to certain information received from Police, I created a copy of all available CCTV footage related to an incident that had taken place at ${incidentLocation} on the ${incidentDate}. The incident occurred at ${incidentAddress}.`;
+const para5 = `${statementNumber}. In relation to certain information received from Police, I created a copy of all available CCTV footage related to an incident that had taken place around ${incidentLocation} on the ${incidentDate}. The incident occurred at ${incidentAddress}.`;
 const lines5 = doc.splitTextToSize(para5.substring(3), maxWidth - numberIndent);
 doc.text(`${statementNumber}.`, margin, yPosition);
 doc.text(lines5, margin + numberIndent, yPosition);
