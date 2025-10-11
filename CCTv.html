@@ -621,7 +621,7 @@
             const maxWidth = pageWidth - 2 * margin;
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
-            const title = 'CCTV STATEMENT OF A WITNESS';
+            const title = 'STATEMENT OF A WITNESS';
             const titleWidth = doc.getTextWidth(title);
             doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
             yPosition += 15;
@@ -682,12 +682,27 @@
             yPosition += lines3.length * 7 + 7;
             statementNumber++;
             // Custom CCTV statement paragraph
-            const cctvParagraph = `I am currently employed as a ${employment} at ${employer}. In relation to certain information received from police, I created a copy of all available CCTV footage related to an incident that had taken place at ${incidentLocation} on the ${incidentDate}. The incident occurred at ${incidentAddress}. At ${handoverTime} on ${handoverDate} I handed a ${mediaType} with the copied CCTV footage to Police.`;
-            const cctvLines = doc.splitTextToSize(cctvParagraph, maxWidth - numberIndent);
-            doc.text(`${statementNumber}.`, margin, yPosition);
-            doc.text(cctvLines, margin + numberIndent, yPosition);
-            yPosition += cctvLines.length * 7 + 7;
-            statementNumber++;
+const para4 = `${statementNumber}. I am currently employed as a ${employment} at ${employer}.`;
+const lines4 = doc.splitTextToSize(para4.substring(3), maxWidth - numberIndent);
+doc.text(`${statementNumber}.`, margin, yPosition);
+doc.text(lines4, margin + numberIndent, yPosition);
+yPosition += lines4.length * 7 + 8;
+statementNumber++;
+
+const para5 = `${statementNumber}. In relation to certain information received from Police, I created a copy of all available CCTV footage related to an incident that had taken place at ${incidentLocation} on the ${incidentDate}. The incident occurred at ${incidentAddress}.`;
+const lines5 = doc.splitTextToSize(para5.substring(3), maxWidth - numberIndent);
+doc.text(`${statementNumber}.`, margin, yPosition);
+doc.text(lines5, margin + numberIndent, yPosition);
+yPosition += lines5.length * 7 + 8;
+statementNumber++;
+
+const para6 = `${statementNumber}. At ${handoverTime} on ${handoverDate} I handed a ${mediaType} with the copied CCTV footage to Police.`;
+const lines6 = doc.splitTextToSize(para6.substring(3), maxWidth - numberIndent);
+doc.text(`${statementNumber}.`, margin, yPosition);
+doc.text(lines6, margin + numberIndent, yPosition);
+yPosition += lines6.length * 7 + 8;
+statementNumber++;
+
             addSignatures(yPosition);
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
