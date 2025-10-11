@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CCTV Statement Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="index.html">
+
+  <style> 
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f5f5f5;
+    color: #111;
+  }
+
+  body.dark-mode {
+    background-color: #18181b;
+    color: #f5f5f5;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 40px 30px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  body.dark-mode .container {
+    background: #232326;
+  }
+
+  h1 {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: inherit;
+  }
+
+  label {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.95rem;
+  }
+
+  input, select, button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  input:focus, select:focus, button:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  body.dark-mode input,
+  body.dark-mode select {
+    background: #2c2c2f;
+    border-color: #444;
+    color: #fff;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .today-btn, .toggle-btn, .clear-signature, .generate-btn {
+    width: auto;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .today-btn:hover,
+  .toggle-btn:hover,
+  .clear-signature:hover,
+  .generate-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .toggle-btn.active {
+    background-color: #111;
+    color: #fff;
+  }
+
+  body.dark-mode .toggle-btn.active {
+    background-color: #fafafa;
+    color: #111;
+  }
+
+  .age-input-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .age-input-field {
+    display: none;
+  }
+
+  .age-input-field.active {
+    display: block;
+  }
+
+  .signature-section {
+    margin-top: 2rem;
+    border-top: 1px solid #ddd;
+    padding-top: 1.5rem;
+  }
+
+  .signature-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .signature-box {
+    flex: 1 1 300px;
+  }
+
+  .signature-canvas-container {
+    border: 1px dashed #aaa;
+    border-radius: 8px;
+    height: 120px;
+    background: #fafafa;
+    margin-bottom: 0.5rem;
+  }
+
+  body.dark-mode .signature-canvas-container {
+    background: #2b2b2f;
+    border-color: #444;
+  }
+
+  .generate-btn {
+    display: block;
+    width: 100%;
+    font-weight: 600;
+    margin-top: 1.5rem;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: .3s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .3s;
+  }
+
+  input:checked + .slider {
+    background-color: #007bff;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(22px);
+  }
+
+  @media (max-width: 600px) {
+    .container {
+      margin: 20px;
+      padding: 25px 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <span>Dark Mode</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div class="container">
+        <h1>CCTV Statement Generator</h1>
+        <form id="cctvForm">
+            <div class="form-group">
+                <label for="matterOf">In the matter of:</label>
+                <input type="text" id="matterOf" name="matterOf" placeholder="Police V" required>
+            </div>
+            <div class="form-group">
+                <label for="place">Place:</label>
+                <input type="text" id="place" name="place" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <div class="date-input-group">
+                    <input type="date" id="date" name="date" required pattern="\d{4}-\d{2}-\d{2}">
+                    <button type="button" class="today-btn" onclick="setToday()">Today</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required placeholder="John Smith">
+            </div>
+            <div class="form-group">
+                <label>Age or Date of Birth:</label>
+                <div class="age-input-toggle">
+                    <button type="button" class="toggle-btn active" onclick="toggleAgeInput('age', event)">Age</button>
+                    <button type="button" class="toggle-btn" onclick="toggleAgeInput('dob', event)">Date of Birth</button>
+                </div>
+                <div id="ageField" class="age-input-field active">
+                    <input type="number" id="age" name="age" min="1" max="120" placeholder="Enter age">
+                </div>
+                <div id="dobField" class="age-input-field">
+                    <input type="text" id="dob" name="dob" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}">
+                    <small>Enter date of birth in DD/MM/YYYY format</small>
+                </div>
+            </div>
+            <!-- Custom CCTV Statement Inputs -->
+            <div class="form-group">
+                <label>I am currently employed as a</label>
+                <input type="text" id="employment" name="employment" placeholder="Your role" required style="width: 180px; display: inline-block;">
+<label>at</label>
+                <input type="text" id="employer" name="employer" placeholder="Workplace" required style="width: 180px; display: inline-block;">
+            </div>
+            <div class="form-group">
+                <label>In relation to certain information received from police, I created a copy of all available CCTV footage related to an incident that had taken place at</label>
+                <input type="text" id="incidentLocation" name="incidentLocation" placeholder="Incident location" required style="width: 180px; display: inline-block;">
+                <label>on the</label>
+                <input type="text" id="incidentDate" name="incidentDate" placeholder="Incident date" required style="width: 120px; display: inline-block;">
+            </div>
+            <div class="form-group">
+                <label>The incident occurred at</label>
+                <input type="text" id="incidentAddress" name="incidentAddress" placeholder="Incident address" required style="width: 180px; display: inline-block;">
+            </div>
+            <div class="form-group">
+                <label>At</label>
+                <input type="text" id="handoverTime" name="handoverTime" placeholder="Time" required style="width: 120px; display: inline-block;">
+                <label>on</label>
+                <input type="text" id="handoverDate" name="handoverDate" placeholder="Date" required style="width: 120px; display: inline-block;">
+                <label>I handed a</label>
+                <input type="text" id="mediaType" name="mediaType" placeholder="USB/DVD/etc" required style="width: 120px; display: inline-block;">
+                <label>with the copied CCTV footage to Police.</label>
+            </div>
+            <!-- Signature Section (copied from index.html) -->
+            <div class="signature-section">
+                <h3>Signatures</h3>
+                <div class="signature-row">
+                    <div class="signature-box">
+                        <label>Statement Maker Signature:</label>
+                        <div class="signature-canvas-container">
+                            <canvas id="statementMakerCanvas" class="signature-canvas"></canvas>
+                        </div>
+                        <div class="signature-controls">
+                            <button type="button" class="clear-signature" onclick="clearSignature('statementMakerCanvas')">Clear Signature</button>
+                        </div>
+                        <div class="signature-details">
+                            <div>
+                                <label for="statementMakerName">Name:</label>
+                                <input type="text" id="statementMakerName" name="statementMakerName" readonly>
+                            </div>
+                            <div>
+                                <label for="statementMakerDate">Date:</label>
+                                <input type="text" id="statementMakerDate" name="statementMakerDate" required readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="signature-box">
+                        <label>Witness Signature:</label>
+                        <div class="signature-canvas-container">
+                            <canvas id="witnessCanvas" class="signature-canvas"></canvas>
+                        </div>
+                        <div class="signature-controls">
+                            <button type="button" class="clear-signature" onclick="clearSignature('witnessCanvas')">Clear Signature</button>
+                        </div>
+                        <div class="signature-details">
+                            <div>
+                                <label for="witnessName">Witness Name:</label>
+                                <input type="text" id="witnessName" name="witnessName" required>
+                            </div>
+                            <div>
+                                <label for="witnessRank">Witness Rank:</label>
+                                <select id="witnessRank" name="witnessRank" required>
+                                    <option value="">Select rank...</option>
+                                    <option value="Constable">Constable</option>
+                                    <option value="Senior Constable">Senior Constable</option>
+                                    <option value="Sergeant">Sergeant</option>
+                                    <option value="Inspector">Inspector</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="witnessDate">Date:</label>
+                                <input type="text" id="witnessDate" name="witnessDate" required readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="generate-btn" onclick="generatePDF()">Generate PDF Statement</button>
+        </form>
+    </div>
+    <script>
+        // --- JS logic copied and adapted from index.html ---
+        let isDrawing = false;
+        let canvases = {};
+        let currentAgeInput = 'age';
+
+        function pad(n) { return n < 10 ? '0' + n : n; }
+        function formatDate_ddmmyyyy(dateObj) {
+            if (!dateObj) return '';
+            const d = typeof dateObj === 'string' ? new Date(dateObj) : dateObj;
+            if (isNaN(d)) return '';
+            return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+        }
+        function today_ddmmyyyy() {
+            const today = new Date();
+            return formatDate_ddmmyyyy(today);
+        }
+        function setToday() {
+            const d = new Date();
+            const iso = d.toISOString().split('T')[0];
+            document.getElementById('date').value = iso;
+            document.getElementById('statementMakerDate').value = formatDate_ddmmyyyy(d);
+            document.getElementById('witnessDate').value = formatDate_ddmmyyyy(d);
+        }
+        function toggleAgeInput(type, event) {
+            currentAgeInput = type;
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('ageField').classList.remove('active');
+            document.getElementById('dobField').classList.remove('active');
+            if (type === 'age') {
+                document.getElementById('ageField').classList.add('active');
+                document.getElementById('dob').value = '';
+            } else {
+                document.getElementById('dobField').classList.add('active');
+                document.getElementById('age').value = '';
+            }
+        }
+        function calculateAgeFromDOB(dobString) {
+            const parts = dobString.split('/');
+            if (parts.length !== 3) return null;
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+            const birthDate = new Date(year, month, day);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        document.getElementById('dob').addEventListener('input', function() {
+            const dobString = this.value.trim();
+            if (dobString.length === 10) {
+                const age = calculateAgeFromDOB(dobString);
+                if (age !== null && age >= 0 && age <= 120) {
+                    document.getElementById('age').value = age;
+                }
+            }
+        });
+        function initializeCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            function setCanvasSize() {
+                const tempDataUrl = canvas.toDataURL();
+                const container = canvas.parentElement;
+                canvas.width = container.offsetWidth;
+                canvas.height = Math.max(container.offsetHeight, 120);
+                if (tempDataUrl) {
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = tempDataUrl;
+                }
+            }
+            setCanvasSize();
+            window.addEventListener('resize', setCanvasSize);
+            const ctx = canvas.getContext('2d');
+            canvases[canvasId] = { canvas, ctx };
+            function setSignatureColor() {
+                if (document.documentElement.classList.contains('dark-mode')) {
+                    ctx.strokeStyle = '#ffffff';
+                } else {
+                    ctx.strokeStyle = '#000000';
+                }
+            }
+            setSignatureColor();
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('touchstart', handleTouch, {passive:false});
+            canvas.addEventListener('touchmove', handleTouch, {passive:false});
+            canvas.addEventListener('touchend', stopDrawing);
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'statementGenDarkMode') setSignatureColor();
+            });
+            document.getElementById('darkModeToggle').addEventListener('change', setSignatureColor);
+            function startDrawing(e) {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                ctx.beginPath(); ctx.moveTo(x, y);
+            }
+            function draw(e) {
+                if (!isDrawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+            function stopDrawing() {
+                if (isDrawing) {
+                    ctx.stroke(); ctx.beginPath();
+                    isDrawing = false;
+                }
+            }
+            function handleTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                    e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore dark mode setting
+            const darkModeSetting = localStorage.getItem('statementGenDarkMode');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeSetting === '1') {
+                darkModeToggle.checked = true;
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                darkModeToggle.checked = false;
+                document.documentElement.classList.remove('dark-mode');
+            }
+            initializeCanvas('statementMakerCanvas');
+            initializeCanvas('witnessCanvas');
+            setToday();
+            document.getElementById('name').addEventListener('input', function() {
+                document.getElementById('statementMakerName').value = this.value;
+            });
+            document.getElementById('statementMakerDate').value = today_ddmmyyyy();
+            document.getElementById('witnessDate').value = today_ddmmyyyy();
+        });
+        function clearSignature(canvasId) {
+            const { canvas, ctx } = canvases[canvasId];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        function isCanvasBlank(canvas) {
+            const context = canvas.getContext('2d');
+            const pixelBuffer = new Uint32Array(
+                context.getImageData(0, 0, canvas.width, canvas.height).data.buffer
+            );
+            return !pixelBuffer.some(color => color !== 0);
+        }
+        function toggleDarkMode() {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            if (isDark) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+            localStorage.setItem('statementGenDarkMode', isDark ? '1' : '0');
+        }
+        function generatePDF() {
+            const matterOf = document.getElementById('matterOf').value;
+            const place = document.getElementById('place').value;
+            const dateInput = document.getElementById('date').value;
+            const name = document.getElementById('name').value;
+            let age;
+            if (currentAgeInput === 'age') {
+                age = document.getElementById('age').value;
+            } else {
+                const dobString = document.getElementById('dob').value;
+                age = calculateAgeFromDOB(dobString);
+                if (age === null) {
+                    alert('Please enter a valid date of birth in DD/MM/YYYY format.');
+                    return;
+                }
+            }
+            const statementMakerDate = document.getElementById('statementMakerDate').value;
+            const witnessName = document.getElementById('witnessName').value;
+            const witnessRank = document.getElementById('witnessRank').value;
+            const witnessDate = document.getElementById('witnessDate').value;
+            // Custom CCTV fields
+            const employment = document.getElementById('employment').value;
+            const employer = document.getElementById('employer').value;
+            const incidentLocation = document.getElementById('incidentLocation').value;
+            const incidentDate = document.getElementById('incidentDate').value;
+            const incidentAddress = document.getElementById('incidentAddress').value;
+            const handoverTime = document.getElementById('handoverTime').value;
+            const handoverDate = document.getElementById('handoverDate').value;
+            const mediaType = document.getElementById('mediaType').value;
+            if (!matterOf || !place || !dateInput || !name || !age || !employment || !employer || !incidentLocation || !incidentDate || !incidentAddress || !handoverTime || !handoverDate || !mediaType || !witnessName || !witnessRank) {
+                alert('Please fill in all required fields before generating the PDF.');
+                return;
+            }
+            const formattedDate = formatDate_ddmmyyyy(dateInput);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            function addSignatures(currentY) {
+                const margin = 20;
+                const bottomMargin = 20;
+                const signatureY = 280 - bottomMargin;
+                doc.setFont(undefined, 'normal');
+                const witnessText = 'Witness:';
+                const witnessTextWidth = doc.getTextWidth(witnessText);
+                doc.text(witnessText, margin - 10, signatureY - 5);
+                doc.line(margin - 10 + witnessTextWidth, signatureY - 5, margin - 10 + witnessTextWidth + 50, signatureY - 5);
+                const witnessCanvas = document.getElementById('witnessCanvas');
+                if (!isCanvasBlank(witnessCanvas)) {
+                    const witnessSignatureData = witnessCanvas.toDataURL('image/png');
+                    doc.addImage(witnessSignatureData, 'PNG', margin - 10 + witnessTextWidth, signatureY - 20, 50, 15);
+                }
+                doc.text(witnessName, margin - 10 + witnessTextWidth, signatureY + 3);
+                doc.text(witnessRank, margin - 10 + witnessTextWidth, signatureY + 9);
+                doc.text(witnessDate, margin - 10 + witnessTextWidth, signatureY + 15);
+                const rightSideStart = margin + 90;
+                const signatureText = 'Signature:';
+                const signatureTextWidth = doc.getTextWidth(signatureText);
+                doc.text(signatureText, rightSideStart, signatureY - 5);
+                doc.line(rightSideStart + signatureTextWidth, signatureY - 5, rightSideStart + signatureTextWidth + 40, signatureY - 5);
+                const statementCanvas = document.getElementById('statementMakerCanvas');
+                if (!isCanvasBlank(statementCanvas)) {
+                    const statementSignatureData = statementCanvas.toDataURL('image/png');
+                    doc.addImage(statementSignatureData, 'PNG', rightSideStart + signatureTextWidth, signatureY - 20, 40, 15);
+                }
+                doc.text(name, rightSideStart + signatureTextWidth, signatureY + 3);
+                doc.text(statementMakerDate, rightSideStart + signatureTextWidth, signatureY + 9);
+            }
+            function addPageHeader(pageNum) {
+                const margin = 20;
+                const pageWidth = doc.internal.pageSize.width;
+                if (pageNum > 1) {
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'bold');
+                    const statementLabel = `Statement of:`;
+                    const matterLabel = `In the matter of:`;
+                    const line1Width = doc.getTextWidth(statementLabel) + 1 + doc.getTextWidth(name);
+                    const line2Width = doc.getTextWidth(matterLabel) + 1 + doc.getTextWidth(matterOf);
+                    const maxLineWidth = Math.max(line1Width, line2Width);
+                    const centerStart = (pageWidth - maxLineWidth) / 2;
+                    const labelTextSpacing = 6;
+                    doc.text(statementLabel, centerStart, 10);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(name, centerStart + doc.getTextWidth(statementLabel) + labelTextSpacing, 10);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(matterLabel, centerStart, 17);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(matterOf, centerStart + doc.getTextWidth(matterLabel) + labelTextSpacing, 17);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'normal');
+                }
+            }
+            let yPosition = 20;
+            const margin = 20;
+            const pageWidth = doc.internal.pageSize.width;
+            const maxWidth = pageWidth - 2 * margin;
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            const title = 'CCTV STATEMENT OF A WITNESS';
+            const titleWidth = doc.getTextWidth(title);
+            doc.text(title, (pageWidth - titleWidth) / 2, yPosition);
+            yPosition += 15;
+            doc.setLineWidth(1.2);
+            doc.line(margin, yPosition, pageWidth - margin, yPosition);
+            doc.setLineWidth(0.2);
+            yPosition += 12;
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            const caseDetailsHeight = 20;
+            doc.rect(margin, yPosition, maxWidth, caseDetailsHeight);
+            yPosition += 5;
+            doc.setFont(undefined, 'bold');
+            doc.text('In the matter of:', margin + 3, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(matterOf, margin + 65, yPosition);
+            yPosition += 5;
+            doc.setFont(undefined, 'bold');
+            doc.text('Place:', margin + 3, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(place, margin + 65, yPosition);
+            yPosition += 5;
+            doc.setFont(undefined, 'bold');
+            doc.text('Date:', margin + 3, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(formatDate_ddmmyyyy(dateInput), margin + 65, yPosition);
+            yPosition += 8;
+            const nameBoxHeight = 7;
+            doc.rect(margin, yPosition, maxWidth, nameBoxHeight);
+            yPosition += 5;
+            doc.setFont(undefined, 'bold');
+            doc.text('Name:', margin + 3, yPosition);
+            doc.setFont(undefined, 'normal');
+            doc.text(name, margin + 33, yPosition);
+            yPosition += 7;
+            doc.setFont(undefined, 'bold');
+            doc.text('STATES:', margin, yPosition);
+            yPosition += 8;
+            doc.setFont(undefined, 'normal');
+            // First three paragraphs
+            let statementNumber = 1;
+            const numberIndent = 5;
+            const statement1 = `${statementNumber}. This statement made by me accurately sets out the evidence that I would be prepared, if necessary, to give in court as a witness. The statement is true to the best of my knowledge and belief and I make it knowing that, if it is tendered in evidence, I will be liable to prosecution if I have wilfully stated in it anything that I know to be false, or do not believe to be true.`;
+            const lines1 = doc.splitTextToSize(statement1.substring(3), maxWidth - numberIndent);
+            doc.text(`${statementNumber}.`, margin, yPosition);
+            doc.text(lines1, margin + numberIndent, yPosition);
+            yPosition += lines1.length * 7 + 2;
+            statementNumber++;
+            const statement2Text = `I am ${age} years of age.`;
+            doc.text(`${statementNumber}.`, margin, yPosition);
+            doc.text(statement2Text, margin + numberIndent, yPosition);
+            yPosition += 12;
+            statementNumber++;
+            const statement3Text = `I have not used Generative Artificial Intelligence (Gen AI) in the creation of this statement or any attached exhibits.`;
+            const lines3 = doc.splitTextToSize(statement3Text, maxWidth - numberIndent);
+            doc.text(`${statementNumber}.`, margin, yPosition);
+            doc.text(lines3, margin + numberIndent, yPosition);
+            yPosition += lines3.length * 7 + 7;
+            statementNumber++;
+            // Custom CCTV statement paragraph
+            const cctvParagraph = `I am currently employed as a ${employment} at ${employer}. In relation to certain information received from police, I created a copy of all available CCTV footage related to an incident that had taken place at ${incidentLocation} on the ${incidentDate}. The incident occurred at ${incidentAddress}. At ${handoverTime} on ${handoverDate} I handed a ${mediaType} with the copied CCTV footage to Police.`;
+            const cctvLines = doc.splitTextToSize(cctvParagraph, maxWidth - numberIndent);
+            doc.text(`${statementNumber}.`, margin, yPosition);
+            doc.text(cctvLines, margin + numberIndent, yPosition);
+            yPosition += cctvLines.length * 7 + 7;
+            statementNumber++;
+            addSignatures(yPosition);
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                addPageHeader(i);
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth - 40, 285);
+            }
+            const fileName = `CCTV_Statement_of_${name.replace(/\s+/g, '_')}.pdf`;
+            doc.save(fileName);
+        }
+    </script>
+</body>
+</html>
